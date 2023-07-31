@@ -1,5 +1,6 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local keys = require "system.keys" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Adds an action to trigger when a key is pressed with modifier keys.
@@ -17,21 +18,21 @@ function PrimeUI.keyCombo(key, withCtrl, withAlt, withShift, action)
     PrimeUI.addTask(function()
         local heldCtrl, heldAlt, heldShift = false, false, false
         while true do
-            local event, param1, param2 = os.pullEvent() -- wait for key
+            local event, param = coroutine.yield() -- wait for key
             if event == "key" then
                 -- check if key is down, all modifiers are correct, and that it's not held
-                if param1 == key and heldCtrl == withCtrl and heldAlt == withAlt and heldShift == withShift and not param2 then
+                if param.keycode == key and heldCtrl == withCtrl and heldAlt == withAlt and heldShift == withShift and not param.isRepeat then
                     if type(action) == "string" then PrimeUI.resolve("keyCombo", action)
                     else action() end
                 -- activate modifier keys
-                elseif param1 == keys.leftCtrl or param1 == keys.rightCtrl then heldCtrl = true
-                elseif param1 == keys.leftAlt or param1 == keys.rightAlt then heldAlt = true
-                elseif param1 == keys.leftShift or param1 == keys.rightShift then heldShift = true end
+                elseif param.keycode == keys.leftCtrl or param.keycode == keys.rightCtrl then heldCtrl = true
+                elseif param.keycode == keys.leftAlt or param.keycode == keys.rightAlt then heldAlt = true
+                elseif param.keycode == keys.leftShift or param.keycode == keys.rightShift then heldShift = true end
             elseif event == "key_up" then
                 -- deactivate modifier keys
-                if param1 == keys.leftCtrl or param1 == keys.rightCtrl then heldCtrl = false
-                elseif param1 == keys.leftAlt or param1 == keys.rightAlt then heldAlt = false
-                elseif param1 == keys.leftShift or param1 == keys.rightShift then heldShift = false end
+                if param.keycode == keys.leftCtrl or param.keycode == keys.rightCtrl then heldCtrl = false
+                elseif param.keycode == keys.leftAlt or param.keycode == keys.rightAlt then heldAlt = false
+                elseif param.keycode == keys.leftShift or param.keycode == keys.rightShift then heldShift = false end
             end
         end
     end)

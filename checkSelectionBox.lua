@@ -1,5 +1,8 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local framebuffer = require "system.framebuffer" -- DO NOT COPY THIS LINE
+local keys = require "system.keys" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Creates a list of entries with toggleable check boxes.
@@ -20,17 +23,17 @@ function PrimeUI.checkSelectionBox(win, x, y, width, height, selections, action,
     expect(5, height, "number")
     expect(6, selections, "table")
     expect(7, action, "function", "string", "nil")
-    fgColor = expect(8, fgColor, "number", "nil") or colors.white
-    bgColor = expect(9, bgColor, "number", "nil") or colors.black
+    fgColor = expect(8, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(9, bgColor, "number", "nil") or terminal.colors.black
     -- Calculate how many selections there are.
     local nsel = 0
     for _ in pairs(selections) do nsel = nsel + 1 end
     -- Create the outer display box.
-    local outer = window.create(win, x, y, width, height)
+    local outer = framebuffer.framebuffer(win, x, y, width, height)
     outer.setBackgroundColor(bgColor)
     outer.clear()
     -- Create the inner scroll box.
-    local inner = window.create(outer, 1, 1, width - 1, nsel)
+    local inner = framebuffer.framebuffer(outer, 1, 1, width - 1, nsel)
     inner.setBackgroundColor(bgColor)
     inner.setTextColor(fgColor)
     inner.clear()
@@ -60,13 +63,13 @@ function PrimeUI.checkSelectionBox(win, x, y, width, height, selections, action,
         local scrollPos = 1
         while true do
             -- Wait for an event.
-            local ev = table.pack(os.pullEvent())
+            local event, param = coroutine.yield()
             -- Look for a scroll event or a selection event.
             local dir
-            if ev[1] == "key" then
-                if ev[2] == keys.up then dir = -1
-                elseif ev[2] == keys.down then dir = 1
-                elseif ev[2] == keys.space and selections[lines[selected][1]] ~= "R" then
+            if event == "key" then
+                if param.keycode == keys.up then dir = -1
+                elseif param.keycode == keys.down then dir = 1
+                elseif param.keycode == keys.space and selections[lines[selected][1]] ~= "R" then
                     -- (Un)select the item.
                     lines[selected][2] = not lines[selected][2]
                     inner.setCursorPos(2, selected)
@@ -83,8 +86,8 @@ function PrimeUI.checkSelectionBox(win, x, y, width, height, selections, action,
                     end
                     inner.setCursorPos(2, selected)
                 end
-            elseif ev[1] == "mouse_scroll" and ev[3] >= screenX and ev[3] < screenX + width and ev[4] >= screenY and ev[4] < screenY + height then
-                dir = ev[2]
+            elseif event == "mouse_scroll" and param.x >= screenX and param.x < screenX + width and param.y >= screenY and param.y < screenY + height then
+                dir = param.direction
             end
             -- Scroll the screen if required.
             if dir and (selected + dir >= 1 and selected + dir <= nsel) then

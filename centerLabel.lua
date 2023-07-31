@@ -1,5 +1,6 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Draws a line of text, centering it inside a box horizontally.
@@ -16,8 +17,8 @@ function PrimeUI.centerLabel(win, x, y, width, text, fgColor, bgColor)
     expect(3, y, "number")
     expect(4, width, "number")
     expect(5, text, "string")
-    fgColor = expect(6, fgColor, "number", "nil") or colors.white
-    bgColor = expect(7, bgColor, "number", "nil") or colors.black
+    fgColor = expect(6, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(7, bgColor, "number", "nil") or terminal.colors.black
     assert(#text <= width, "string is too long")
     win.setCursorPos(x + math.floor((width - #text) / 2), y)
     win.setTextColor(fgColor)

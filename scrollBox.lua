@@ -1,5 +1,8 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local keys = require "system.keys" -- DO NOT COPY THIS LINE
+local framebuffer = require "system.framebuffer" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Creates a scrollable window, which allows drawing large content in a small area.
@@ -23,15 +26,15 @@ function PrimeUI.scrollBox(win, x, y, width, height, innerHeight, allowArrowKeys
     expect(6, innerHeight, "number")
     expect(7, allowArrowKeys, "boolean", "nil")
     expect(8, showScrollIndicators, "boolean", "nil")
-    fgColor = expect(9, fgColor, "number", "nil") or colors.white
-    bgColor = expect(10, bgColor, "number", "nil") or colors.black
+    fgColor = expect(9, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(10, bgColor, "number", "nil") or terminal.colors.black
     if allowArrowKeys == nil then allowArrowKeys = true end
     -- Create the outer container box.
-    local outer = window.create(win == term and term.current() or win, x, y, width, height)
+    local outer = framebuffer.framebuffer(win, x, y, width, height)
     outer.setBackgroundColor(bgColor)
     outer.clear()
     -- Create the inner scrolling box.
-    local inner = window.create(outer, 1, 1, width - (showScrollIndicators and 1 or 0), innerHeight)
+    local inner = framebuffer.framebuffer(outer, 1, 1, width - (showScrollIndicators and 1 or 0), innerHeight)
     inner.setBackgroundColor(bgColor)
     inner.clear()
     -- Draw scroll indicators if desired.
@@ -48,16 +51,16 @@ function PrimeUI.scrollBox(win, x, y, width, height, innerHeight, allowArrowKeys
         local scrollPos = 1
         while true do
             -- Wait for next event.
-            local ev = table.pack(os.pullEvent())
+            local event, param = coroutine.yield()
             -- Update inner height in case it changed.
             innerHeight = select(2, inner.getSize())
             -- Check for scroll events and set direction.
             local dir
-            if ev[1] == "key" and allowArrowKeys then
-                if ev[2] == keys.up then dir = -1
-                elseif ev[2] == keys.down then dir = 1 end
-            elseif ev[1] == "mouse_scroll" and ev[3] >= x and ev[3] < x + width and ev[4] >= y and ev[4] < y + height then
-                dir = ev[2]
+            if event == "key" and allowArrowKeys then
+                if param.keycode == keys.up then dir = -1
+                elseif param.keycode == keys.down then dir = 1 end
+            elseif event == "mouse_scroll" and param.x >= x and param.x < x + width and param.y >= y and param.y < y + height then
+                dir = param.direction
             end
             -- If there's a scroll event, move the window vertically.
             if dir and (scrollPos + dir >= 1 and scrollPos + dir <= innerHeight - height) then

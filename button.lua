@@ -1,5 +1,6 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Creates a clickable button on screen with text.
@@ -17,9 +18,9 @@ function PrimeUI.button(win, x, y, text, action, fgColor, bgColor, clickedColor)
     expect(3, y, "number")
     expect(4, text, "string")
     expect(5, action, "function", "string")
-    fgColor = expect(6, fgColor, "number", "nil") or colors.white
-    bgColor = expect(7, bgColor, "number", "nil") or colors.gray
-    clickedColor = expect(8, clickedColor, "number", "nil") or colors.lightGray
+    fgColor = expect(6, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(7, bgColor, "number", "nil") or terminal.colors.gray
+    clickedColor = expect(8, clickedColor, "number", "nil") or terminal.colors.lightGray
     -- Draw the initial button.
     win.setCursorPos(x, y)
     win.setBackgroundColor(bgColor)
@@ -29,7 +30,8 @@ function PrimeUI.button(win, x, y, text, action, fgColor, bgColor, clickedColor)
     PrimeUI.addTask(function()
         local buttonDown = false
         while true do
-            local event, button, clickX, clickY = os.pullEvent()
+            local event, param = coroutine.yield()
+            local button, clickX, clickY = param.button, param.x, param.y
             local screenX, screenY = PrimeUI.getWindowPos(win, x, y)
             if event == "mouse_click" and button == 1 and clickX >= screenX and clickX < screenX + #text + 2 and clickY == screenY then
                 -- Initiate a click action (but don't trigger until mouse up).

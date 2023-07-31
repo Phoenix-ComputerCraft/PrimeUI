@@ -1,7 +1,11 @@
 -- PrimeUI by JackMacWindows
 -- Public domain/CC0
 
-local expect = require "cc.expect".expect
+local expect = require "system.expect"
+local framebuffer = require "system.framebuffer"
+local keys = require "system.keys"
+local terminal = require "system.terminal"
+local util = require "system.util"
 
 -- Initialization code
 local PrimeUI = {}
@@ -10,7 +14,7 @@ do
     local restoreCursor
 
     --- Adds a task to run in the main loop.
-    ---@param func function The function to run, usually an `os.pullEvent` loop
+    ---@param func function The function to run, usually a `coroutine.yield` loop
     function PrimeUI.addTask(func)
         expect(1, func, "function")
         coros[#coros+1] = {coro = coroutine.create(func)}
@@ -24,12 +28,13 @@ do
 
     --- Clears the screen and resets all components. Do not use any previously
     --- created components after calling this function.
-    function PrimeUI.clear()
+    ---@param term Terminal The root terminal object
+    function PrimeUI.clear(term)
         -- Reset the screen.
         term.setCursorPos(1, 1)
         term.setCursorBlink(false)
-        term.setBackgroundColor(colors.black)
-        term.setTextColor(colors.white)
+        term.setBackgroundColor(terminal.colors.black)
+        term.setTextColor(terminal.colors.white)
         term.clear()
         -- Reset the task list and cursor restore function.
         coros = {}
@@ -50,12 +55,11 @@ do
     ---@return number x The absolute X position of the window
     ---@return number y The absolute Y position of the window
     function PrimeUI.getWindowPos(win, x, y)
-        if win == term then return x, y end
-        while win ~= term.native() and win ~= term.current() do
+        while win.getParent do
             if not win.getPosition then return x, y end
             local wx, wy = win.getPosition()
             x, y = x + wx - 1, y + wy - 1
-            _, win = debug.getupvalue(select(2, debug.getupvalue(win.isColor, 1)), 1) -- gets the parent window through an upvalue
+            win = win.getParent()
         end
         return x, y
     end
@@ -66,19 +70,22 @@ do
         while true do
             -- Restore the cursor and wait for the next event.
             if restoreCursor then restoreCursor() end
-            local ev = table.pack(os.pullEvent())
+            local event, param = coroutine.yield()
             -- Run all coroutines.
             for _, v in ipairs(coros) do
-                if v.filter == nil or v.filter == ev[1] then
-                    -- Resume the coroutine, passing the current event.
-                    local res = table.pack(coroutine.resume(v.coro, table.unpack(ev, 1, ev.n)))
+                -- Resume the coroutine, passing the current event.
+                local res = table.pack(coroutine.resume(v.coro, event, param))
+                -- If the call failed, bail out. Coroutines should never exit.
+                if not res[1] then error(res[2], 2) end
+                -- Execute syscalls if requested by the coroutine. (Preemption is handled internally by the OS.)
+                while res[2] == "syscall" do
+                    -- Execute the syscall, and resume the coroutine, passing the result.
+                    local res = table.pack(coroutine.resume(v.coro, coroutine.yield(table.unpack(res, 2, res.n))))
                     -- If the call failed, bail out. Coroutines should never exit.
                     if not res[1] then error(res[2], 2) end
-                    -- If the coroutine resolved, return its values.
-                    if res[2] == coros then return table.unpack(res, 3, res.n) end
-                    -- Set the next event filter.
-                    v.filter = res[2]
                 end
+                -- If the coroutine resolved, return its values.
+                if res[2] == coros then return table.unpack(res, 3, res.n) end
             end
         end
     end

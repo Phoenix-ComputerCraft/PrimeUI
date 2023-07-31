@@ -1,5 +1,6 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Creates a progress bar, which can be updated by calling the returned function.
@@ -16,8 +17,8 @@ function PrimeUI.progressBar(win, x, y, width, fgColor, bgColor, useShade)
     expect(2, x, "number")
     expect(3, y, "number")
     expect(4, width, "number")
-    fgColor = expect(5, fgColor, "number", "nil") or colors.white
-    bgColor = expect(6, bgColor, "number", "nil") or colors.black
+    fgColor = expect(5, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(6, bgColor, "number", "nil") or terminal.colors.black
     expect(7, useShade, "boolean", "nil")
     local function redraw(progress)
         expect(1, progress, "number")

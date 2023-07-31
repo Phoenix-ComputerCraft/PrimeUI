@@ -1,5 +1,6 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Creates a text input box.
@@ -20,8 +21,8 @@ function PrimeUI.inputBox(win, x, y, width, action, fgColor, bgColor, replacemen
     expect(3, y, "number")
     expect(4, width, "number")
     expect(5, action, "function", "string")
-    fgColor = expect(6, fgColor, "number", "nil") or colors.white
-    bgColor = expect(7, bgColor, "number", "nil") or colors.black
+    fgColor = expect(6, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(7, bgColor, "number", "nil") or terminal.colors.black
     expect(8, replacement, "string", "nil")
     expect(9, history, "table", "nil")
     expect(10, completion, "function", "nil")
@@ -54,6 +55,6 @@ function PrimeUI.inputBox(win, x, y, width, action, fgColor, bgColor, replacemen
         if type(action) == "string" then PrimeUI.resolve("inputBox", action, res)
         else action(res) end
         -- Spin forever, because tasks cannot exit.
-        while true do os.pullEvent() end
+        while true do coroutine.yield() end
     end)
 end

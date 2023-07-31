@@ -1,5 +1,7 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local framebuffer = require "system.framebuffer" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Creates a list of entries that can each be selected.
@@ -22,15 +24,14 @@ function PrimeUI.selectionBox(win, x, y, width, height, entries, action, selectC
     expect(6, entries, "table")
     expect(7, action, "function", "string")
     expect(8, selectChangeAction, "function", "string", "nil")
-    fgColor = expect(9, fgColor, "number", "nil") or colors.white
-    bgColor = expect(10, bgColor, "number", "nil") or colors.black
+    fgColor = expect(9, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(10, bgColor, "number", "nil") or terminal.colors.black
     -- Create container window.
-    local entrywin = window.create(win, x, y, width - 1, height)
+    local entrywin = framebuffer.window(win, x, y, width - 1, height)
     local selection, scroll = 1, 1
     -- Create a function to redraw the entries on screen.
     local function drawEntries()
-        -- Clear and set invisible for performance.
-        entrywin.setVisible(false)
+        -- Clear window.
         entrywin.setBackgroundColor(bgColor)
         entrywin.clear()
         -- Draw each entry in the scrolled region.
@@ -56,37 +57,37 @@ function PrimeUI.selectionBox(win, x, y, width, height, entries, action, selectC
         entrywin.write(scroll > 1 and "\30" or " ")
         entrywin.setCursorPos(width, height)
         entrywin.write(scroll < #entries - height + 1 and "\31" or " ")
-        -- Send updates to the screen.
-        entrywin.setVisible(true)
     end
     -- Draw first screen.
     drawEntries()
     -- Add a task for selection keys.
     PrimeUI.addTask(function()
         while true do
-            local _, key = os.pullEvent("key")
-            if key == keys.down and selection < #entries then
-                -- Move selection down.
-                selection = selection + 1
-                if selection > scroll + height - 1 then scroll = scroll + 1 end
-                -- Send action if necessary.
-                if type(selectChangeAction) == "string" then PrimeUI.resolve("selectionBox", selectChangeAction, selection)
-                elseif selectChangeAction then selectChangeAction(selection) end
-                -- Redraw screen.
-                drawEntries()
-            elseif key == keys.up and selection > 1 then
-                -- Move selection up.
-                selection = selection - 1
-                if selection < scroll then scroll = scroll - 1 end
-                -- Send action if necessary.
-                if type(selectChangeAction) == "string" then PrimeUI.resolve("selectionBox", selectChangeAction, selection)
-                elseif selectChangeAction then selectChangeAction(selection) end
-                -- Redraw screen.
-                drawEntries()
-            elseif key == keys.enter then
-                -- Select the entry: send the action.
-                if type(action) == "string" then PrimeUI.resolve("selectionBox", action, entries[selection])
-                else action(entries[selection]) end
+            local event, param = coroutine.yield()
+            if event == "key" then
+                if param.keycode == keys.down and selection < #entries then
+                    -- Move selection down.
+                    selection = selection + 1
+                    if selection > scroll + height - 1 then scroll = scroll + 1 end
+                    -- Send action if necessary.
+                    if type(selectChangeAction) == "string" then PrimeUI.resolve("selectionBox", selectChangeAction, selection)
+                    elseif selectChangeAction then selectChangeAction(selection) end
+                    -- Redraw screen.
+                    drawEntries()
+                elseif param.keycode == keys.up and selection > 1 then
+                    -- Move selection up.
+                    selection = selection - 1
+                    if selection < scroll then scroll = scroll - 1 end
+                    -- Send action if necessary.
+                    if type(selectChangeAction) == "string" then PrimeUI.resolve("selectionBox", selectChangeAction, selection)
+                    elseif selectChangeAction then selectChangeAction(selection) end
+                    -- Redraw screen.
+                    drawEntries()
+                elseif param.keycode == keys.enter then
+                    -- Select the entry: send the action.
+                    if type(action) == "string" then PrimeUI.resolve("selectionBox", action, entries[selection])
+                    else action(entries[selection]) end
+                end
             end
         end
     end)

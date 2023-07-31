@@ -1,5 +1,6 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Draws a line of text at a position.
@@ -14,8 +15,8 @@ function PrimeUI.label(win, x, y, text, fgColor, bgColor)
     expect(2, x, "number")
     expect(3, y, "number")
     expect(4, text, "string")
-    fgColor = expect(5, fgColor, "number", "nil") or colors.white
-    bgColor = expect(6, bgColor, "number", "nil") or colors.black
+    fgColor = expect(5, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(6, bgColor, "number", "nil") or terminal.colors.black
     win.setCursorPos(x, y)
     win.setTextColor(fgColor)
     win.setBackgroundColor(bgColor)

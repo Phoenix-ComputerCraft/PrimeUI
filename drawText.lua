@@ -1,5 +1,6 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Draws a block of text inside a window with word wrapping, optionally resizing the window to fit.
@@ -13,8 +14,8 @@ function PrimeUI.drawText(win, text, resizeToFit, fgColor, bgColor)
     expect(1, win, "table")
     expect(2, text, "string")
     expect(3, resizeToFit, "boolean", "nil")
-    fgColor = expect(4, fgColor, "number", "nil") or colors.white
-    bgColor = expect(5, bgColor, "number", "nil") or colors.black
+    fgColor = expect(4, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(5, bgColor, "number", "nil") or terminal.colors.black
     -- Set colors.
     win.setBackgroundColor(bgColor)
     win.setTextColor(fgColor)

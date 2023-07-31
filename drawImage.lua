@@ -1,5 +1,5 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Draws a BIMG-formatted image to the screen. This does not support transparency,

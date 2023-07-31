@@ -1,5 +1,7 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local framebuffer = require "system.framebuffer" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Creates a text box that wraps text and can have its text modified later.
@@ -19,10 +21,10 @@ function PrimeUI.textBox(win, x, y, width, height, text, fgColor, bgColor)
     expect(4, width, "number")
     expect(5, height, "number")
     expect(6, text, "string")
-    fgColor = expect(7, fgColor, "number", "nil") or colors.white
-    bgColor = expect(8, bgColor, "number", "nil") or colors.black
+    fgColor = expect(7, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(8, bgColor, "number", "nil") or terminal.colors.black
     -- Create the box window.
-    local box = window.create(win, x, y, width, height)
+    local box = framebuffer.window(win, x, y, width, height)
     -- Override box.getSize to make print not scroll.
     function box.getSize()
         return width, math.huge

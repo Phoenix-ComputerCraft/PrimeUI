@@ -1,5 +1,6 @@
 local PrimeUI = require "util" -- DO NOT COPY THIS LINE
-local expect = require "cc.expect".expect -- DO NOT COPY THIS LINE
+local expect = require "system.expect" -- DO NOT COPY THIS LINE
+local terminal = require "system.terminal" -- DO NOT COPY THIS LINE
 -- Start copying below this line. --
 
 --- Draws a thin border around a screen region.
@@ -16,8 +17,8 @@ function PrimeUI.borderBox(win, x, y, width, height, fgColor, bgColor)
     expect(3, y, "number")
     expect(4, width, "number")
     expect(5, height, "number")
-    fgColor = expect(6, fgColor, "number", "nil") or colors.white
-    bgColor = expect(7, bgColor, "number", "nil") or colors.black
+    fgColor = expect(6, fgColor, "number", "nil") or terminal.colors.white
+    bgColor = expect(7, bgColor, "number", "nil") or terminal.colors.black
     -- Draw the top-left corner & top border.
     win.setBackgroundColor(bgColor)
     win.setTextColor(fgColor)
